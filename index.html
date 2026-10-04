@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المساعد الصحي الذكي</title>
+    <style>
+        :root { --primary: #2ecc71; --dark: #2c3e50; --light: #f8f9fa; }
+        body { font-family: sans-serif; background-color: #eef2f5; margin: 0; padding: 20px; color: var(--dark); text-align: right; }
+        .container { max-width: 550px; margin: 20px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: var(--primary); font-size: 24px; }
+        .subtitle { text-align: center; color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        textarea { height: 80px; resize: none; }
+        button { background-color: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 15px; }
+        button:hover { background-color: #27ae60; }
+        .result-box { display: none; margin-top: 25px; border-top: 2px dashed #ddd; padding-top: 20px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: var(--light); padding: 15px; border-radius: 8px; text-align: center; border-right: 4px solid var(--primary); }
+        .stat-card h3 { margin: 0; font-size: 14px; color: #7f8c8d; }
+        .stat-card p { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; }
+        .meal-plan { background: #fdfefe; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; }
+        .meal-title { font-weight: bold; color: var(--primary); margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>المساعد الصحي الذكي 🥑</h1>
+    <div class="subtitle">مخطط الوجبات وحاسبة السعرات الفورية</div>
+    <div class="form-group">
+        <label>الهدف الصحي:</label>
+        <select id="goal">
+            <option value="lose">إنقاص الوزن وحرق الدهون</option>
+            <option value="maintain">المحافظة على الوزن الحالي</option>
+            <option value="gain">زيادة الوزن وبناء العضلات</option>
+        </select>
+    </div>
+    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div>
+            <label>الوزن (كيلو):</label>
+            <input type="number" id="weight" placeholder="75">
+        </div>
+        <div>
+            <label>الطول (سم):</label>
+            <input type="number" id="height" placeholder="175">
+        </div>
+    </div>
+    <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div>
+            <label>العمر:</label>
+            <input type="number" id="age" placeholder="25">
+        </div>
+        <div>
+            <label>الجنس:</label>
+            <select id="gender">
+                <option value="male">ذكر</option>
+                <option value="female">أنثى</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>المكونات المتوفرة في مطبخك (اختياري):</label>
+        <textarea id="ingredients" placeholder="بيض، دجاج، أرز..."></textarea>
+    </div>
+    <button onclick="generatePlan()">توليد الخطة الذكية فوراً ✨</button>
+    <div class="result-box" id="resultBox">
+        <h2>📊 تقريرك الصحي المخصص:</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>السعرات اليومية</h3>
+                <p id="resCalories">0 كالوري</p>
+            </div>
+            <div class="stat-card">
+                <h3>البروتين المطلوب</h3>
+                <p id="resProtein">0 جرام</p>
+            </div>
+        </div>
+        <h3>💡 خطة الوجبات المقترحة:</h3>
+        <div class="meal-plan" id="mealPlanText"></div>
+    </div>
+</div>
+<script>
+function generatePlan() {
+    const goal = document.getElementById('goal').value;
+    const weight = parseFloat(document.getElementById('weight').value);
+    const height = parseFloat(document.getElementById('height').value);
+    const age = parseFloat(document.getElementById('age').value);
+    const gender = document.getElementById('gender').value;
+    const ingredients = document.getElementById('ingredients').value.toLowerCase();
+    if(!weight || !height || !age) { alert("الرجاء ملء حقول الوزن والطول والعمر أولاً!"); return; }
+    let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+    bmr = (gender === 'male') ? bmr + 5 : bmr - 161;
+    let tdee = Math.round(bmr * 1.375);
+    let targetCalories = tdee;
+    let proteinPerKg = 1.6;
+    if (goal === 'lose') { targetCalories = tdee - 400; proteinPerKg = 2.0; }
+    else if (goal === 'gain') { targetCalories = tdee + 400; proteinPerKg = 1.8; }
+    document.getElementById('resCalories').innerText = targetCalories + " كالوري";
+    document.getElementById('resProtein').innerText = Math.round(weight * proteinPerKg) + " جرام";
+    let planHtml = "";
+    let hasEggs = ingredients.includes("بيض");
+    let hasChicken = ingredients.includes("دجاج") || ingredients.includes("لحم");
+    let hasOats = ingredients.includes("شوفان");
+    let hasRice = ingredients.includes("أرز") || ingredients.includes("رز");
+    planHtml += "<div class='meal-title'>🍳 وجبة الإفطار:</div>";
+    if(hasOats) planHtml += "<p>• عصيدة الشوفان بالحليب والفواكه.</p>";
+    else if(hasEggs) planHtml += "<p>• 3 بيضات مسلوقة مع شريحة خبز أسمر وخضار.</p>";
+    else planHtml += "<p>• زبادي يوناني أو جبن قريش مع نصف رغيف خبز كامل.</p>";
+    planHtml += "<div class='meal-title'>🍗 وجبة الغداء:</div>";
+    if(hasChicken && hasRice) planHtml += "<p>• دجاج مشوي بجانب أرز مسلوق وطبق سلطة خضراء كبير.</p>";
+    else if(hasChicken) planHtml += "<p>• صدور دجاج مطبوخة مع بطاطس مشوية في الفرن.</p>";
+    else if(hasRice) planHtml += "<p>• أرز مسلوق مع علبة تونة مصفاة وسلطة.</p>";
+    else planHtml += "<p>• وجبة متوازنة تحتوي على مصدر بروتين متاح مع سلطة.</p>";
+    planHtml += "<div class='meal-title'>🥛 وجبة العشاء:</div>";
+    if(hasEggs && !hasOats) planHtml += "<p>• بيضتان أومليت خفيف مع خيار وجبنة بيضاء.</p>";
+    else planHtml += "<p>• علبة زبادي طبيعي مع حفنة مكسرات صغيرة أو ثمرة فاكهة.</p>";
+    document.getElementById('mealPlanText').innerHTML = planHtml;
+    document.getElementById('resultBox').style.display = 'block';
+    document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+  </html>
+  
